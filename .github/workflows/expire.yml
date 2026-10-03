@@ -1,0 +1,71 @@
+# Deletes screenshots older than KEEP_DAYS, then squashes the repo to a single
+# commit so deleted images don't live on in git history. Runs daily and can be
+# started by hand from the Actions tab.
+name: Expire old screenshots
+
+on:
+  schedule:
+    - cron: "17 8 * * *"   # 08:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: expire
+  cancel-in-progress: false
+
+jobs:
+  expire:
+    runs-on: ubuntu-latest
+    env:
+      KEEP_DAYS: "7"         # keep in step with KEEP_DAYS in index.html
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Delete expired screenshots and squash history
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch="${GITHUB_REF_NAME}"
+          cutoff=$(date -u -d "-${KEEP_DAYS} days" +%y%m%d)
+          echo "Removing screenshots dated before ${cutoff} (yymmdd, UTC)"
+
+          for attempt in 1 2 3 4 5; do
+            git fetch --depth=1 origin "$branch"
+            git reset --hard FETCH_HEAD
+            head=$(git rev-parse HEAD)
+
+            removed=0
+            for f in i/*; do
+              [ -f "$f" ] || continue
+              day=$(basename "$f" | cut -c1-6)
+              if [[ "$day" =~ ^[0-9]{6}$ && "$day" < "$cutoff" ]]; then
+                git rm -q "$f"
+                removed=$((removed + 1))
+              fi
+            done
+
+            # One fresh root commit holding the current files; old history is dropped.
+            commit=$(git commit-tree "$(git write-tree)" -m "Keep last ${KEEP_DAYS} days of screenshots (${removed} expired)")
+
+            # Lease on the commit we read, so an upload that lands mid-run isn't lost.
+            if git push --force-with-lease="$branch:$head" origin "$commit:refs/heads/$branch"; then
+              echo "Expired ${removed} screenshot(s)."
+              break
+            fi
+            [ "$attempt" -eq 5 ] && { echo "Gave up after 5 attempts"; exit 1; }
+            echo "Someone uploaded while this ran; retrying."
+            sleep $((attempt * 10))
+          done
+
+      - name: Rebuild the Pages site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages/builds" || echo "Pages rebuild request skipped"
