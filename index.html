@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Shots</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='2' width='60' height='60' rx='14' fill='%232f81f7'/%3E%3Cpath d='M14 26V14h12M50 26V14H38M14 38v12h12M50 38v12H38' stroke='white' stroke-width='5' fill='none'/%3E%3Ccircle cx='32' cy='32' r='6' fill='white'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --surface-2: #eef0f3; --text: #16181d; --muted: #626874;
+    --border: #dfe2e7; --accent: #2f81f7; --accent-text: #ffffff; --danger: #d1242f;
+    --shadow: 0 1px 2px rgb(0 0 0 / .06), 0 4px 16px rgb(0 0 0 / .06);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1115; --surface: #171a20; --surface-2: #1f232b; --text: #e8eaee; --muted: #9aa1ad;
+      --border: #2a2f38; --accent: #4d94ff; --accent-text: #0b0d10; --danger: #ff6b6b;
+      --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 8px 24px rgb(0 0 0 / .3);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1115; --surface: #171a20; --surface-2: #1f232b; --text: #e8eaee; --muted: #9aa1ad;
+    --border: #2a2f38; --accent: #4d94ff; --accent-text: #0b0d10; --danger: #ff6b6b;
+    --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 8px 24px rgb(0 0 0 / .3);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+
+  header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent);
+           backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+  header .wrap { display: flex; align-items: center; gap: 12px; min-height: 60px; flex-wrap: wrap; padding-block: 8px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 18px; }
+  .brand svg { width: 26px; height: 26px; }
+  .stats { color: var(--muted); font-size: 13px; }
+  .spacer { flex: 1; }
+  .btn { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 6px 12px;
+         font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+  .btn.danger { color: var(--danger); }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  main { padding-block: 20px 60px; }
+  .day { margin-top: 28px; }
+  .day:first-child { margin-top: 4px; }
+  .day h2 { display: flex; align-items: baseline; gap: 10px; font-size: 15px; font-weight: 650; margin: 0 0 12px; }
+  .day h2 span { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+          box-shadow: var(--shadow); padding: 0; text-align: left; display: block; width: 100%; }
+  .card:hover { border-color: var(--accent); }
+  .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .thumb { aspect-ratio: 16 / 10; background: var(--surface-2); display: block; width: 100%; object-fit: cover; }
+  .meta { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; font-size: 13px; color: var(--muted); }
+  .meta b { color: var(--text); font-weight: 550; }
+
+  .empty { text-align: center; color: var(--muted); padding: 80px 16px; }
+  .empty h2 { color: var(--text); font-size: 18px; margin: 0 0 6px; }
+  .notice { margin-top: 16px; padding: 10px 14px; border-radius: 8px; background: var(--surface);
+            border: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+
+  dialog { border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100vh;
+           width: 100vw; height: 100vh; color: #fff; }
+  dialog::backdrop { background: rgb(8 9 12 / .88); }
+  .lb { display: flex; flex-direction: column; height: 100%; }
+  .lb-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; flex-wrap: wrap; }
+  .lb-bar .btn { background: rgb(255 255 255 / .08); border-color: rgb(255 255 255 / .16); color: #fff; }
+  .lb-bar .btn.primary { background: #4d94ff; border-color: #4d94ff; color: #0b0d10; }
+  .lb-bar .btn.danger { color: #ff8a8a; }
+  .lb-title { font-size: 14px; color: #c9ced6; margin-right: auto; }
+  .lb-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 16px 16px; position: relative; }
+  .lb-stage img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; box-shadow: 0 10px 40px rgb(0 0 0 / .5); }
+  .nav { position: absolute; top: 50%; translate: 0 -50%; width: 44px; height: 44px; border-radius: 50%;
+         border: 1px solid rgb(255 255 255 / .2); background: rgb(20 22 28 / .7); color: #fff; font-size: 20px; }
+  .nav.prev { left: 16px; } .nav.next { right: 16px; }
+
+  .toast { position: fixed; left: 50%; bottom: 24px; translate: -50% 20px; opacity: 0; transition: .2s;
+           background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 14px;
+           pointer-events: none; z-index: 20; }
+  .toast.show { opacity: 1; translate: -50% 0; }
+
+  @media (max-width: 560px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .meta { flex-direction: column; gap: 0; }
+    .nav { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="14" fill="#2f81f7"/><path d="M14 26V14h12M50 26V14H38M14 38v12h12M50 38v12H38" stroke="#fff" stroke-width="5" fill="none"/><circle cx="32" cy="32" r="6" fill="#fff"/></svg>
+      Shots
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="spacer"></div>
+    <button class="btn" id="refresh" title="Refresh">Refresh</button>
+    <button class="btn" id="auth"></button>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<dialog id="lightbox" aria-label="Screenshot">
+  <div class="lb">
+    <div class="lb-bar">
+      <div class="lb-title" id="lbTitle"></div>
+      <button class="btn primary" id="lbCopy">Copy link</button>
+      <a class="btn" id="lbOpen" target="_blank" rel="noopener">Open original</a>
+      <button class="btn danger" id="lbDelete">Delete</button>
+      <button class="btn" id="lbClose" aria-label="Close">Close</button>
+    </div>
+    <div class="lb-stage">
+      <button class="nav prev" id="lbPrev" aria-label="Previous">‹</button>
+      <img id="lbImg" alt="">
+      <button class="nav next" id="lbNext" aria-label="Next">›</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const KEEP_DAYS = 7;          // keep in step with KEEP_DAYS in .github/workflows/expire.yml
+const EXPIRE_UTC_HOUR = 8;    // the expiry job runs daily at about 08:17 UTC
+const NAME_RE = /^(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})-[a-z0-9]+\.(png|jpe?g)$/;
+const TOKEN_KEY = "shotshare.token";
+
+// ---- where are we? owner.github.io/repo/ on Pages, or ?repo=owner/name when testing locally
+const params = new URLSearchParams(location.search);
+let owner, repo, siteBase = null;
+if (params.get("repo")) {
+  [owner, repo] = params.get("repo").split("/");
+} else if (location.hostname.endsWith(".github.io")) {
+  owner = location.hostname.split(".")[0];
+  const first = location.pathname.split("/").filter(Boolean)[0];
+  repo = first && !first.includes(".") ? first : location.hostname;
+  siteBase = location.origin + (repo === location.hostname ? "/" : `/${repo}/`);
+}
+
+const $ = id => document.getElementById(id);
+const store = {
+  get() { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; } },
+  set(v) { try { v ? localStorage.setItem(TOKEN_KEY, v) : localStorage.removeItem(TOKEN_KEY); } catch {} },
+};
+let token = store.get();
+let shots = [];
+let current = -1;
+
+const rawUrl = name => `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/i/${name}`;
+const linkFor = name => siteBase ? `${siteBase}i/${name}` : rawUrl(name);
+
+function parseShot(item) {
+  const m = NAME_RE.exec(item.name);
+  if (!m) return null;
+  const [, yy, mo, dd, hh, mi, ss] = m.map(Number);
+  const taken = new Date(Date.UTC(2000 + yy, mo - 1, dd, hh, mi, ss));
+  const expires = new Date(Date.UTC(2000 + yy, mo - 1, dd + KEEP_DAYS + 1, EXPIRE_UTC_HOUR, 30));
+  return { name: item.name, sha: item.sha, size: item.size, taken, expires };
+}
+
+async function api(path, options = {}) {
+  const headers = { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (options.body) headers["Content-Type"] = "application/json";
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}${path}`,
+                          { ...options, headers, cache: "no-store" });
+  const body = res.status === 204 ? null : await res.json().catch(() => null);
+  if (!res.ok) {
+    const err = new Error(body?.message || `GitHub error ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return body;
+}
+
+// ---- formatting
+const fmtSize = b => b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1048576).toFixed(1)} MB`;
+const fmtTime = d => d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+const dayKey = d => d.toLocaleDateString("en-CA");
+function dayLabel(d) {
+  const today = new Date(); const y = new Date(); y.setDate(y.getDate() - 1);
+  if (dayKey(d) === dayKey(today)) return "Today";
+  if (dayKey(d) === dayKey(y)) return "Yesterday";
+  return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+}
+function expiresLabel(d) {
+  const hours = (d - Date.now()) / 3.6e6;
+  if (hours <= 0) return "being deleted";
+  if (hours < 24) return "deleted within a day";
+  const days = Math.round(hours / 24);
+  return `deleted in ${days} day${days === 1 ? "" : "s"}`;
+}
+
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+function fallbackToRaw(img, name) {
+  img.addEventListener("error", () => {
+    if (!img.dataset.raw) { img.dataset.raw = "1"; img.src = rawUrl(name); }
+  });
+}
+
+// ---- rendering
+function renderAuth() {
+  $("auth").textContent = token ? "Sign out" : "Sign in to delete";
+  $("auth").classList.toggle("primary", !token);
+}
+
+function renderEmpty(title, text) {
+  $("main").innerHTML = "";
+  const div = document.createElement("div");
+  div.className = "empty";
+  div.innerHTML = "<h2></h2><p></p>";
+  div.querySelector("h2").textContent = title;
+  div.querySelector("p").textContent = text;
+  $("main").append(div);
+}
+
+function render() {
+  const total = shots.reduce((n, s) => n + s.size, 0);
+  $("stats").textContent = shots.length
+    ? `${shots.length} screenshot${shots.length === 1 ? "" : "s"} · ${fmtSize(total)} · kept ${KEEP_DAYS} days`
+    : "";
+  if (!shots.length) {
+    renderEmpty("No screenshots yet", `Press the ShotShare hotkey to take one. They stay here for ${KEEP_DAYS} days.`);
+    return;
+  }
+  const main = $("main");
+  main.innerHTML = "";
+  let section, grid, key;
+  shots.forEach((s, i) => {
+    if (dayKey(s.taken) !== key) {
+      key = dayKey(s.taken);
+      section = document.createElement("section");
+      section.className = "day";
+      const h = document.createElement("h2");
+      h.textContent = dayLabel(s.taken);
+      const sub = document.createElement("span");
+      sub.textContent = expiresLabel(s.expires);
+      h.append(sub);
+      grid = document.createElement("div");
+      grid.className = "grid";
+      section.append(h, grid);
+      main.append(section);
+    }
+    const card = document.createElement("button");
+    card.className = "card";
+    card.setAttribute("aria-label", `Screenshot from ${s.taken.toLocaleString()}`);
+    const img = document.createElement("img");
+    img.className = "thumb"; img.loading = "lazy"; img.alt = "";
+    fallbackToRaw(img, s.name);
+    img.src = linkFor(s.name);
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = "<b></b><span></span>";
+    meta.querySelector("b").textContent = fmtTime(s.taken);
+    meta.querySelector("span").textContent = fmtSize(s.size);
+    card.append(img, meta);
+    card.addEventListener("click", () => openShot(i));
+    grid.append(card);
+  });
+}
+
+async function load() {
+  if (!owner || !repo) {
+    renderEmpty("Which repository?", "Open this page from GitHub Pages, or add ?repo=owner/name to the address.");
+    return;
+  }
+  $("refresh").disabled = true;
+  try {
+    const items = await api("/contents/i");
+    shots = items.map(parseShot).filter(Boolean).sort((a, b) => b.taken - a.taken);
+    render();
+  } catch (e) {
+    if (e.status === 404) { shots = []; render(); }
+    else if (e.status === 403 && /rate limit/i.test(e.message))
+      renderEmpty("GitHub needs a breather", "Too many refreshes from this network in the last hour. Sign in with your token to lift the limit, or try again later.");
+    else if (e.status === 401) { signOut(); load(); }
+    else renderEmpty("Couldn't load screenshots", e.message);
+  } finally {
+    $("refresh").disabled = false;
+  }
+}
+
+// ---- lightbox
+function openShot(i) {
+  current = i;
+  const s = shots[i];
+  const img = $("lbImg");
+  img.removeAttribute("data-raw");
+  img.src = linkFor(s.name);
+  $("lbTitle").textContent = `${dayLabel(s.taken)}, ${fmtTime(s.taken)} · ${fmtSize(s.size)} · ${expiresLabel(s.expires)}`;
+  $("lbOpen").href = linkFor(s.name);
+  $("lbDelete").hidden = !token;
+  $("lbPrev").disabled = i === 0;
+  $("lbNext").disabled = i === shots.length - 1;
+  if (!$("lightbox").open) $("lightbox").showModal();
+}
+$("lbImg").addEventListener("error", () => {
+  const img = $("lbImg");
+  if (current >= 0 && !img.dataset.raw) { img.dataset.raw = "1"; img.src = rawUrl(shots[current].name); }
+});
+$("lbClose").onclick = () => $("lightbox").close();
+$("lbPrev").onclick = () => current > 0 && openShot(current - 1);
+$("lbNext").onclick = () => current < shots.length - 1 && openShot(current + 1);
+$("lightbox").addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft") $("lbPrev").click();
+  if (e.key === "ArrowRight") $("lbNext").click();
+});
+$("lightbox").addEventListener("click", e => { if (e.target.classList.contains("lb-stage")) $("lightbox").close(); });
+$("lbCopy").onclick = async () => {
+  try { await navigator.clipboard.writeText(linkFor(shots[current].name)); toast("Link copied"); }
+  catch { prompt("Copy this link:", linkFor(shots[current].name)); }
+};
+$("lbDelete").onclick = async () => {
+  const s = shots[current];
+  if (!confirm("Delete this screenshot for everyone? Links to it will stop working.")) return;
+  $("lbDelete").disabled = true;
+  try {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await api(`/contents/i/${s.name}`, { method: "DELETE", body: JSON.stringify({ message: `Delete ${s.name}`, sha: s.sha }) });
+        break;
+      } catch (e) {
+        if (e.status !== 409 || attempt >= 4) throw e;
+        await new Promise(r => setTimeout(r, 800 * (attempt + 1)));
+      }
+    }
+    shots.splice(current, 1);
+    $("lightbox").close();
+    render();
+    toast("Deleted");
+  } catch (e) {
+    alert(e.status === 403 || e.status === 404
+      ? "Your token can't delete from this repository. It needs Contents: Read and write."
+      : `Couldn't delete: ${e.message}`);
+  } finally {
+    $("lbDelete").disabled = false;
+  }
+};
+
+// ---- sign in: accepts the same token or invite code the Windows app uses
+function signOut() { token = ""; store.set(""); renderAuth(); }
+$("auth").onclick = async () => {
+  if (token) { signOut(); toast("Signed out"); return; }
+  let value = (prompt("Paste your ShotShare invite code or GitHub token.\nIt stays in this browser only.") || "").trim();
+  if (!value) return;
+  if (value.startsWith("shotshare:")) {
+    try { value = JSON.parse(atob(value.slice(10).replace(/-/g, "+").replace(/_/g, "/"))).token; }
+    catch { alert("That invite code looks damaged."); return; }
+  }
+  token = value;
+  try {
+    const info = await api("");
+    if (info.permissions && !info.permissions.push) throw Object.assign(new Error(), { status: 403 });
+    store.set(token); renderAuth(); toast("Signed in"); load();
+  } catch (e) {
+    token = "";
+    alert(e.status === 401 ? "GitHub didn't accept that token." : "That token can't access this repository.");
+  }
+};
+$("refresh").onclick = load;
+
+renderAuth();
+load();
+</script>
+</body>
+</html>
